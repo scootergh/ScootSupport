@@ -1,0 +1,180 @@
+require 'map-func'
+require 'camera'
+require 'calc'
+require 'prefs'
+require 'player'
+require 'physics'
+require 'noise'
+require 'terrain'
+local utf8 = require 'utf8'
+
+function love.load(  )
+    love.window.setMode(wWidth, wHeight)
+
+    -- load all fonts
+    fontFiles = love.filesystem.getDirectoryItems('fonts')
+    fonts = {}
+    for k,v in pairs(fontFiles) do
+        fonts[k] = love.graphics.newFont('fonts/' .. v)
+    end
+    fontCounter = 1
+    love.graphics.setFont(fonts[fontCounter])
+
+    -- load audio tracks
+    audioFiles = love.filesystem.getDirectoryItems('audio')
+    audio = {}
+    for k,v in pairs(audioFiles) do
+        audio[k] = love.audio.newSource('audio/' .. v)
+    end
+    audioCounter = 1
+    -- love.audio.play(audio[audioCounter])
+
+    -- laod maps
+    local maps = {}
+    maps[0] = loadMap('maps/chez-peter.lua')
+    maps[1] = loadMap('maps/core-dump.lua')
+    -- camera:newLayer(.5, function() drawMap(maps[0]) end)
+    -- camera:newLayer(1, function() drawMap(maps[1], 0, 6 * 32) end)
+
+    -- load in player
+    player:load()
+    camera:newLayer(1, function()
+        player:draw()
+    end)
+
+    -- load physics objects
+    physics:load()
+
+    -- load perlin noise generator
+    perlin:load()
+
+    -- load terrain tiles
+    terrain:load()
+
+    -- ps = love.graphics.newParticleSystem(love.graphics.newImage("gfx/icon.png"), psBufferSize)
+    -- ps:setParticleLifetime(psLifetimeMin, psLifetimeMax)
+    -- ps:setEmissionRate(psEmissionRate)
+    -- ps:setSpread(psSpread)
+    -- ps:setSpeed(psSpeed)
+    -- ps:setDirection(calc:degToRad(psDirection))
+    -- ps:setLinearAcceleration(psAccelerationX, psAccelerationY)
+    -- ps:stop()
+    love.graphics.setBackgroundColor(104, 136, 248)
+end
+
+function love.update( dt )
+    dtotal = dtotal + dt        -- update time passed
+    physics:update(dt)
+    player.moving = pressedKeys['up'] or pressedKeys['down'] or pressedKeys['right'] or pressedKeys['left']
+    if player.moving then
+        player.dir.x = ''
+        player.dir.y = ''
+
+        if pressedKeys['up'] then
+            player.dir.y = 'up'
+        elseif pressedKeys['down'] then
+            player.dir.y = 'down'
+        end
+
+        if pressedKeys['right'] then
+            player.dir.x = 'right'
+        elseif pressedKeys['left'] then
+            player.dir.x = 'left'
+        end
+
+        player:move()
+
+        player.movTimer = player.movTimer + dt
+        if player.movTimer > 0.2 then
+            player.movTimer = 0
+            player.iter = player.iter + 1
+            if player.iter > table.getn(player.states[player.dir.x .. player.dir.y]) then
+                player.iter = 1
+            end
+        end
+    else
+        player.dir.x = 'idle'
+        player.dir.y = ''
+        player.iter = 1
+    end
+end
+
+function love.draw(  )
+    love.timer.sleep(0.01)
+    physics:draw()
+    terrain:draw(1, 1)
+    camera:draw()
+    -- love.graphics.draw(ps, 100, 100)
+    love.graphics.print("FPS: " .. love.timer.getFPS(), 2, 2)
+    -- love.graphics.print(text, love.window.getWidth() - 100, 2)
+end
+
+function love.keypressed( key, isrepeat )
+    pressedKeys[key] = true
+    if key == 'return' then
+        text = text .. "\n"
+    elseif key == 'f1' then
+        -- ps:emit(5)
+        ps:setDirection(calc:degToRad(90))
+        ps:start()
+    elseif key == 'f2' then
+        ps:stop()
+    elseif key == '1' then
+        psEmissionRate = psEmissionRate + 5
+        ps:setEmissionRate(psEmissionRate)
+    elseif key == '2' then
+        if psEmissionRate > 0 then
+            psEmissionRate = psEmissionRate - 5
+        end
+        ps:setEmissionRate(psEmissionRate)
+    elseif key == '3' then
+        psSpeed = psSpeed + 5
+        ps:setSpeed(psSpeed)
+    elseif key == '4' then
+        if psSpeed > 5 then
+            psSpeed = psSpeed - 5
+        end
+        ps:setSpeed(psSpeed)
+    elseif key == '5' then
+        psAccelerationY = psAccelerationY - 5
+        ps:setLinearAcceleration(psAccelerationX, psAccelerationY)
+    elseif key == '6' then
+        if psAccelerationY < -5 then
+            psAccelerationY = psAccelerationY + 5
+        end
+        ps:setLinearAcceleration(psAccelerationX, psAccelerationY)
+    elseif key == 'kp+' then
+        if fontCounter < table.getn(fonts) then
+            fontCounter = fontCounter + 1
+        end
+        love.graphics.setFont(fonts[fontCounter])
+    elseif key == 'kp-' then
+        if fontCounter > 1 then
+            fontCounter = fontCounter - 1
+        end
+        love.graphics.setFont(fonts[fontCounter])
+    elseif key == ' ' then
+        if audioCounter < table.getn(audio) then
+            audioCounter = audioCounter + 1
+        else
+            audioCounter = 1
+        end
+        love.audio.play(audio[audioCounter])
+    elseif key == 'backspace' then
+        love.audio.stop()
+    elseif key == '0' then
+        -- t = love.thread.newThread("thread.lua")
+        -- c1 = love.thread.newChannel()
+        -- c2 = love.thread.getChannel("cookie")
+        -- t:start(c1)
+        -- c2:supply(c1:demand())
+    end
+end
+
+function love.keyreleased( key )
+    pressedKeys[key] = false
+end
+
+function love.textinput( t )
+    -- text = text .. t
+end
