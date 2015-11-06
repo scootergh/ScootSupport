@@ -5,51 +5,24 @@ require 'prefs'
 require 'player'
 require 'physics'
 require 'noise'
-require 'terrain'
 local utf8 = require 'utf8'
 
 function love.load(  )
-    love.window.setMode(wWidth, wHeight)
+    love.graphics.setBackgroundColor(104, 136, 248)
 
-    -- load all fonts
-    fontFiles = love.filesystem.getDirectoryItems('fonts')
-    fonts = {}
-    for k,v in pairs(fontFiles) do
-        fonts[k] = love.graphics.newFont('fonts/' .. v)
-    end
-    fontCounter = 1
-    love.graphics.setFont(fonts[fontCounter])
-
-    -- load audio tracks
-    audioFiles = love.filesystem.getDirectoryItems('audio')
-    audio = {}
-    for k,v in pairs(audioFiles) do
-        audio[k] = love.audio.newSource('audio/' .. v)
-    end
-    audioCounter = 1
-    -- love.audio.play(audio[audioCounter])
-
-    -- laod maps
     local maps = {}
     maps[0] = loadMap('maps/chez-peter.lua')
     maps[1] = loadMap('maps/core-dump.lua')
     -- camera:newLayer(.5, function() drawMap(maps[0]) end)
     -- camera:newLayer(1, function() drawMap(maps[1], 0, 6 * 32) end)
-
-    -- load in player
     player:load()
     camera:newLayer(1, function()
         player:draw()
     end)
 
-    -- load physics objects
     physics:load()
-
-    -- load perlin noise generator
     perlin:load()
-
-    -- load terrain tiles
-    terrain:load()
+    testNoise = perlin:perlin(50, 158)
 
     -- ps = love.graphics.newParticleSystem(love.graphics.newImage("gfx/icon.png"), psBufferSize)
     -- ps:setParticleLifetime(psLifetimeMin, psLifetimeMax)
@@ -59,7 +32,6 @@ function love.load(  )
     -- ps:setDirection(calc:degToRad(psDirection))
     -- ps:setLinearAcceleration(psAccelerationX, psAccelerationY)
     -- ps:stop()
-    love.graphics.setBackgroundColor(104, 136, 248)
 end
 
 function love.update( dt )
@@ -100,12 +72,13 @@ function love.update( dt )
 end
 
 function love.draw(  )
-    love.timer.sleep(0.01)
+    love.graphics.setBackgroundColor(104, 136, 248)
+    love.window.setMode(wWidth, wHeight)
     physics:draw()
-    terrain:draw(1, 1)
     camera:draw()
     -- love.graphics.draw(ps, 100, 100)
     love.graphics.print("FPS: " .. love.timer.getFPS(), 2, 2)
+    love.graphics.print("Noise: " .. testNoise, 2, 14)
     -- love.graphics.print(text, love.window.getWidth() - 100, 2)
 end
 
@@ -113,6 +86,11 @@ function love.keypressed( key, isrepeat )
     pressedKeys[key] = true
     if key == 'return' then
         text = text .. "\n"
+    elseif key == 'backspace' then
+        local byteoffset = utf8.offset(text, -1)
+        if byteoffset then
+            text = string.sub(text, 1, byteoffset - 1)
+        end
     elseif key == 'f1' then
         -- ps:emit(5)
         ps:setDirection(calc:degToRad(90))
@@ -144,30 +122,13 @@ function love.keypressed( key, isrepeat )
         end
         ps:setLinearAcceleration(psAccelerationX, psAccelerationY)
     elseif key == 'kp+' then
-        if fontCounter < table.getn(fonts) then
-            fontCounter = fontCounter + 1
-        end
-        love.graphics.setFont(fonts[fontCounter])
+        psBufferSize = psBufferSize + 5
+        ps:setBufferSize(psBufferSize)
     elseif key == 'kp-' then
-        if fontCounter > 1 then
-            fontCounter = fontCounter - 1
+        if psBufferSize > 0 then
+            psBufferSize = psBufferSize - 5
         end
-        love.graphics.setFont(fonts[fontCounter])
-    elseif key == ' ' then
-        if audioCounter < table.getn(audio) then
-            audioCounter = audioCounter + 1
-        else
-            audioCounter = 1
-        end
-        love.audio.play(audio[audioCounter])
-    elseif key == 'backspace' then
-        love.audio.stop()
-    elseif key == '0' then
-        -- t = love.thread.newThread("thread.lua")
-        -- c1 = love.thread.newChannel()
-        -- c2 = love.thread.getChannel("cookie")
-        -- t:start(c1)
-        -- c2:supply(c1:demand())
+        ps:setBufferSize(psBufferSize)
     end
 end
 
