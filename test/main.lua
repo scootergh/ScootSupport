@@ -21,6 +21,12 @@ function love.load(  )
     end)
 
     physics:load()
+    physics:load()
+    physics:load()
+    physics:load()
+    physics:load()
+    physics:load()
+
     perlin:load()
     testNoise = perlin:perlin(50, 158)
 
