@@ -24,6 +24,10 @@ function love.load(  )
     perlin:load()
     testNoise = perlin:perlin(50, 158)
 
+    -- here's another but different test comment
+    thisoneisnew = 564
+    heresanother = "Testing merge setup for BC"
+
     -- ps = love.graphics.newParticleSystem(love.graphics.newImage("gfx/icon.png"), psBufferSize)
     -- ps:setParticleLifetime(psLifetimeMin, psLifetimeMax)
     -- ps:setEmissionRate(psEmissionRate)
