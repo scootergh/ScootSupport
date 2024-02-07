@@ -10,6 +10,9 @@ local utf8 = require 'utf8'
 function love.load(  )
     love.graphics.setBackgroundColor(104, 136, 248)
 
+    -- test comment
+    local test = 'test'
+
     local maps = {}
     maps[0] = loadMap('maps/chez-peter.lua')
     maps[1] = loadMap('maps/core-dump.lua')
