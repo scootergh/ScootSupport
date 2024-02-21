@@ -25,6 +25,7 @@ function love.load(  )
     testNoise = perlin:perlin(50, 158)
 
     -- here's another but different test comment
+    -- wow another new comment!
     thisoneisnew = 564
     heresanother = "Testing merge setup for BC"
 
